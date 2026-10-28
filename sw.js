@@ -1,4 +1,4 @@
-const CACHE = "hengitys-v1";
+const CACHE = "hengitys-v2";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {

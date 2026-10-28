@@ -9,11 +9,8 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-@property --c1{syntax:"<color>";inherits:true;initial-value:#2dd4bf}
-@property --c2{syntax:"<color>";inherits:true;initial-value:#3b82f6}
-@property --c3{syntax:"<color>";inherits:true;initial-value:#8b5cf6}
-:root{--bg:#05080f;--glass:rgba(255,255,255,.045);--glass2:rgba(255,255,255,.09);--line:rgba(255,255,255,.09);--text:#eef3f8;--mute:#9aabbf;--dim:#5f7086;--warn:#fbbf24;--ok:#5eead4;--danger:#fb7185;--orb:min(82vw,46vh,400px)}
-body{--c1:#2dd4bf;--c2:#3b82f6;--c3:#8b5cf6;transition:--c1 1.6s ease,--c2 1.6s ease,--c3 1.6s ease}
+:root{--bg:#05080f;--glass:rgba(255,255,255,.05);--glass2:rgba(255,255,255,.09);--line:rgba(255,255,255,.09);--text:#eef3f8;--mute:#9aabbf;--dim:#5f7086;--warn:#fbbf24;--ok:#5eead4;--danger:#fb7185;--orb:min(82vw,46vh,400px)}
+body{--c1:#2dd4bf;--c2:#3b82f6;--c3:#8b5cf6}
 body[data-phase=breathe]{--c1:#22d3ee;--c2:#14b8a6;--c3:#2563eb}
 body[data-phase=hold]{--c1:#a5b4fc;--c2:#6d28d9;--c3:#1e1b4b}
 body[data-phase=recover]{--c1:#fcd34d;--c2:#f97316;--c3:#be185d}
@@ -26,16 +23,11 @@ button{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--c1);outline-offset:3px}
 [hidden]{display:none!important}
 
-/* Tausta: revontulimainen hehku + tähdet, värit vaiheen mukaan */
-.sky{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at 50% 115%,color-mix(in srgb,var(--c3) 26%,transparent),transparent 62%),var(--bg)}
-.sky i{position:absolute;width:85vmax;height:85vmax;border-radius:50%;opacity:.5;transition:opacity 2s;animation:drift 30s ease-in-out infinite alternate}
-.sky i:nth-child(1){background:radial-gradient(closest-side,color-mix(in srgb,var(--c1) 42%,transparent),transparent);left:-34vmax;top:-40vmax}
-.sky i:nth-child(2){background:radial-gradient(closest-side,color-mix(in srgb,var(--c2) 38%,transparent),transparent);right:-40vmax;top:6vh;animation-duration:36s;animation-delay:-9s}
-.sky i:nth-child(3){background:radial-gradient(closest-side,color-mix(in srgb,var(--c3) 46%,transparent),transparent);left:-12vmax;bottom:-56vmax;animation-duration:42s;animation-delay:-17s}
-.sky b{position:absolute;inset:0;opacity:.6;animation:twinkle 7s ease-in-out infinite alternate}
-body[data-phase=hold] .sky i{opacity:.28}
-@keyframes drift{to{transform:translate(9vmax,7vmax) scale(1.18)}}
-@keyframes twinkle{to{opacity:.25}}
+/* Tausta: tähdet kerran piirrettynä + kaksi hehkukerrosta, joiden välillä vain opacity vaihtuu */
+.sky{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:var(--bg)}
+.sky canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.75}
+.sky .g{position:absolute;inset:0;opacity:0;transition:opacity 1.8s ease}
+.sky .g.on{opacity:1}
 
 .app{max-width:980px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 16px calc(100px + env(safe-area-inset-bottom));min-height:100dvh;display:flex;flex-direction:column}
 header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px 6px;transition:opacity .8s}
@@ -70,12 +62,10 @@ body.live.holding .orbBox,body.live.holding{cursor:pointer}
 body[data-phase=idle] #ring .d{fill:rgba(255,255,255,.1)}
 #ring .track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:.7}
 #ring .arc{fill:none;stroke:var(--c1);stroke-width:1.5;stroke-linecap:round}
-#orb{position:absolute;inset:0;border-radius:50%;transform:scale(.6);
-  background:radial-gradient(circle at 32% 27%,rgba(255,255,255,.95) 0,color-mix(in srgb,var(--c1) 60%,#fff) 9%,var(--c1) 34%,var(--c2) 66%,color-mix(in srgb,var(--c3) 75%,#000) 100%);
-  box-shadow:0 0 40px color-mix(in srgb,var(--c1) 45%,transparent),inset -24px -34px 70px rgba(0,0,0,.38),inset 12px 16px 46px rgba(255,255,255,.18)}
-#orb::before{content:"";position:absolute;inset:-45%;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--c1) 34%,transparent),color-mix(in srgb,var(--c2) 14%,transparent) 55%,transparent);z-index:-1;pointer-events:none}
-#orb::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.22),transparent 28%,rgba(255,255,255,.12) 58%,transparent 75%);mix-blend-mode:overlay;animation:spin 16s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+#orb{position:absolute;inset:0;border-radius:50%;transform:scale(.6);will-change:transform}
+#orb .oc{position:absolute;inset:0;border-radius:50%;opacity:0;transition:opacity 1.6s ease}
+#orb .oc.on{opacity:1}
+#orb .sh{position:absolute;inset:0;border-radius:50%;box-shadow:inset -24px -34px 70px rgba(0,0,0,.38),inset 12px 16px 46px rgba(255,255,255,.18)}
 body[data-phase=idle] #orb{animation:idle 7s ease-in-out infinite}
 @keyframes idle{0%,100%{transform:scale(.58)}50%{transform:scale(.67)}}
 .orbBox::before,.orbBox::after{content:"";position:absolute;inset:16%;border-radius:50%;border:1px solid color-mix(in srgb,var(--c1) 65%,transparent);opacity:0;pointer-events:none}
@@ -90,7 +80,7 @@ body[data-phase=idle] #big{font-size:clamp(30px,8vw,46px);font-weight:300;letter
 
 .home{width:100%;max-width:520px;display:flex;flex-direction:column;gap:12px;align-items:center}
 body.live .home{display:none}
-.setsum{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;padding:14px 16px;border-radius:20px;background:var(--glass);border:1px solid var(--line);cursor:pointer;backdrop-filter:blur(14px);transition:background .2s,border-color .2s}
+.setsum{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;padding:14px 16px;border-radius:20px;background:var(--glass);border:1px solid var(--line);cursor:pointer;transition:background .2s,border-color .2s}
 .setsum:hover{background:var(--glass2);border-color:rgba(255,255,255,.16)}
 .setsum .t{font-size:15px;color:#d6e1ec;line-height:1.45}
 .setsum .t b{color:#fff;font-weight:600}
@@ -107,12 +97,12 @@ body.live .livectl{display:flex}
 .btn{appearance:none;border:0;border-radius:999px;padding:14px 26px;font-weight:650;font-size:16px;line-height:1;cursor:pointer;color:#03131a;background:linear-gradient(135deg,var(--c1),color-mix(in srgb,var(--c2) 60%,var(--c1)));box-shadow:0 10px 30px -10px color-mix(in srgb,var(--c1) 70%,transparent);transition:transform .15s,filter .2s}
 .btn:hover{filter:brightness(1.08)}
 .btn:active{transform:scale(.97)}
-.btn.ghost{background:var(--glass);color:var(--text);border:1px solid var(--line);box-shadow:none;backdrop-filter:blur(10px);font-weight:500}
+.btn.ghost{background:var(--glass);color:var(--text);border:1px solid var(--line);box-shadow:none;font-weight:500}
 .btn.ghost:hover{background:var(--glass2)}
 .btn.danger{background:rgba(251,113,133,.16);color:#fecdd3;border:1px solid rgba(251,113,133,.4);box-shadow:none}
 .btn.sm{padding:10px 18px;font-size:14px}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.card{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:18px;margin:10px 0;backdrop-filter:blur(14px)}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:18px;margin:10px 0}
 .card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
 .muted{color:var(--mute);font-size:14px}
 code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:6px;font-size:13px}
@@ -126,14 +116,14 @@ textarea{resize:vertical}
 input:focus,textarea:focus{outline:none;border-color:color-mix(in srgb,var(--c1) 70%,transparent)}
 
 /* Navigaatio */
-nav.tabs{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:4px;padding:6px;border-radius:999px;background:rgba(10,15,26,.72);backdrop-filter:blur(18px);border:1px solid var(--line);z-index:5;transition:transform .5s,opacity .5s;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+nav.tabs{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:4px;padding:6px;border-radius:999px;background:rgba(12,18,30,.94);border:1px solid var(--line);z-index:5;transition:transform .5s,opacity .5s;box-shadow:0 12px 40px rgba(0,0,0,.4)}
 nav.tabs button{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:0;background:none;color:var(--mute);font-size:14px;cursor:pointer;transition:background .2s,color .2s}
 nav.tabs button svg{width:18px;height:18px}
 nav.tabs button.on{background:var(--glass2);color:var(--text)}
 body.live nav.tabs{transform:translate(-50%,160%);opacity:0;pointer-events:none}
 
 /* Arkit (modaalit) */
-.sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,4,10,.62);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .3s}
+.sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,4,10,.78);opacity:0;pointer-events:none;transition:opacity .3s}
 .sheet.on{opacity:1;pointer-events:auto}
 .sheet>.panel{width:100%;max-width:560px;max-height:92dvh;overflow:auto;overscroll-behavior:contain;background:linear-gradient(180deg,rgba(24,32,50,.97),rgba(10,14,24,.98));border:1px solid var(--line);border-bottom:0;border-radius:28px 28px 0 0;padding:20px 20px calc(22px + env(safe-area-inset-bottom));transform:translateY(40px);transition:transform .4s cubic-bezier(.2,.8,.2,1);box-shadow:0 -20px 60px rgba(0,0,0,.5)}
 .sheet.on>.panel{transform:none}
@@ -198,7 +188,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 
 /* Historia */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:10px 0}
-.stat{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:14px;backdrop-filter:blur(14px)}
+.stat{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:14px}
 .stat b{display:block;font-size:28px;font-weight:200;font-variant-numeric:tabular-nums;line-height:1.15}
 .stat span{color:var(--mute);font-size:12.5px}
 .stat.hi b{background:linear-gradient(135deg,#fff,var(--c1));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -233,11 +223,11 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 #toast.on{opacity:1;transform:translate(-50%,0)}
 
 @media(min-width:760px){.app{padding-top:22px}}
-@media(prefers-reduced-motion:reduce){.sky i,.sky b,#orb::after,body[data-phase=idle] #orb,.orbBox::before,.orbBox::after{animation:none!important}.view{animation:none}}
+@media(prefers-reduced-motion:reduce){.sky .g,#orb .oc{transition:none}body[data-phase=idle] #orb,.orbBox::before,.orbBox::after{animation:none!important}.view{animation:none}}
 </style>
 </head>
 <body data-phase="idle">
-<div class="sky" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+<div class="sky" aria-hidden="true"><div class="g"></div><div class="g"></div><canvas id="stars"></canvas></div>
 
 <div class="app">
 <header class="top">
@@ -249,7 +239,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;bac
 <section id="session" class="view on" aria-label="Harjoitus">
   <div id="phase" aria-live="polite"></div>
   <div class="orbBox" id="orbBox" role="button" tabindex="0" aria-label="Aloita harjoitus">
-    <div id="orb"></div>
+    <div id="orb"><div class="oc"></div><div class="oc"></div><div class="sh"></div></div>
     <svg id="ring" viewBox="0 0 100 100" aria-hidden="true"></svg>
     <div id="orbText"><div id="big">Aloita</div><div id="small">napauta palloa</div></div>
   </div>
@@ -374,7 +364,7 @@ const dayKey=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
 function toast(t,ms=3400){const el=$("#toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),ms)}
 
 /* ---------- Asetukset ---------- */
-const DEF={breaths:35,pace:2,rounds:4,rec:15,breathSound:true,chime:true,voice:false,vibe:true,holdTick:false};
+const DEF={breaths:35,pace:2,rounds:4,rec:15,countdown:true,breathSound:true,chime:true,voice:false,vibe:true,holdTick:false};
 const S=Object.assign({},DEF,LS.get("wh_settings",{}));
 const saveS=()=>LS.set("wh_settings",S);
 const CTL=[
@@ -390,6 +380,7 @@ const PRESETS=[
   {n:"Rauhallinen",breaths:30,pace:3,rounds:3,rec:15}
 ];
 const TOGS=[
+  ["countdown","Lähtölaskenta","3‑2‑1 ennen jokaista kierrosta. Pallon napautus ohittaa sen."],
   ["breathSound","Hengitysääni","Pehmeä kohina hengityksen tahdissa"],
   ["chime","Merkkiäänet","Kellon kilahdus vaiheen vaihtuessa"],
   ["voice","Puheohjaus","Suomenkielinen ohjaus laitteen puheäänellä"],
@@ -601,7 +592,21 @@ function arcSet(frac,sec){const a=ring.querySelector(".arc");if(!a)return;a.styl
 let run=null,cur=null,wake=null,holding=false;
 function wait(ms){return new Promise((res,rej)=>{if(!run||run.abort)return rej("abort");const id=setTimeout(res,ms);run.res=()=>{clearTimeout(id);res()};run.rej=()=>{clearTimeout(id);rej("abort")}})}
 const until=t=>wait(Math.max(0,t-performance.now()));
-const phase=p=>{document.body.dataset.phase=p};
+/* Odotus, jonka voi ohittaa napauttamalla palloa (valmistautuminen, lepo, lopetus) */
+async function advWait(fn){run.adv=false;run.canAdv=true;try{await fn()}finally{if(run){run.canAdv=false;run.adv=false}}}
+function advance(){if(run&&run.canAdv&&!holding){run.adv=true;run.res?.()}}
+const PAL={idle:["#2dd4bf","#3b82f6","#8b5cf6"],breathe:["#22d3ee","#14b8a6","#2563eb"],hold:["#a5b4fc","#6d28d9","#1e1b4b"],recover:["#fcd34d","#f97316","#be185d"],rest:["#6ee7b7","#0d9488","#1d4ed8"],done:["#fde68a","#f59e0b","#7c3aed"]};
+let palNow=null,palI=0;
+function phase(p){
+  document.body.dataset.phase=p;
+  const k=PAL[p]?p:"idle";if(k===palNow)return;palNow=k;palI^=1;
+  const [a,b,c]=PAL[k],dim=k==="hold"?.6:1,al=v=>Math.round(v*dim*255).toString(16).padStart(2,"0");
+  const g=$$(".sky .g"),o=$$("#orb .oc");
+  g[palI].style.background=`radial-gradient(110% 60% at 0% 0%,${a}${al(.24)},transparent 65%),radial-gradient(90% 55% at 100% 35%,${b}${al(.2)},transparent 65%),radial-gradient(120% 65% at 50% 110%,${c}${al(.42)},transparent 70%)`;
+  o[palI].style.background=`radial-gradient(circle at 32% 27%,#fffffff2 0,${a} 34%,${b} 68%,${c} 100%)`;
+  o[palI].style.boxShadow=`0 0 50px ${a}80,0 0 120px ${b}40`;
+  g[palI].classList.add("on");g[palI^1].classList.remove("on");o[palI].classList.add("on");o[palI^1].classList.remove("on");
+}
 async function wakeOn(){try{wake=await navigator.wakeLock?.request("screen")}catch(e){}}
 function wakeOff(){try{wake?.release()}catch(e){}wake=null}
 const kbd=matchMedia("(hover:hover) and (pointer:fine)").matches;
@@ -628,10 +633,9 @@ async function runSession(){
     breathNoise(true);
     for(let r=1;r<=rounds;r++){
       phase("prep");ringDots(n);orb(.55,1.5);
-      ui(`Kierros ${r} / ${rounds}`,"","valmistaudu",r===1?"Istu tai makaa. Rentouta hartiat ja leuka.":"Seuraava kierros alkaa.");
+      ui(`Kierros ${r} / ${rounds}`,"","valmistaudu",(r===1?"Istu tai makaa. Rentouta hartiat.":"Seuraava kierros alkaa.")+" Napauta palloa, niin aloitat heti.");
       say(r===1?"Asetu mukavasti. Kierros yksi alkaa.":"Kierros "+r+".");chime(523);buzz(30);
-      if(r===1)await wait(1500);
-      for(let c=3;c>0;c--){$("#big").textContent=c;await wait(1000)}
+      await advWait(async()=>{if(S.countdown)for(let c=3;c>0&&!run.adv;c--){$("#big").textContent=c;await wait(1000)}else await wait(1200)});
       phase("breathe");$("#skipBtn").hidden=false;
       let t=performance.now();
       for(let b=1;b<=n;b++){
@@ -645,7 +649,7 @@ async function runSession(){
       const prev=cur.rounds.length?cur.rounds[cur.rounds.length-1].retentionSec:0;
       phase("hold");ringArc();
       ui("Päästä ulos ja pidätä","0:00","pidätys",(kbd?"Kun tarvitset ilmaa, paina välilyöntiä tai napauta.":"Kun tarvitset ilmaa, napauta ruutua.")+(prev?" Edellinen "+fmt(prev)+".":""));
-      say("Päästä ulos ja pidätä.");exhale(2.5);chime(330,2.4);buzz([60,80,60]);orb(.4,3);
+      say("Päästä ulos ja pidätä.");exhale(2.5);chime(330,2.4);buzz([60,80,60]);orb(.52,3);
       const held=await waitHold();
       cur.rounds.push({round:r,retentionSec:held});
       /* palautus */
@@ -656,13 +660,13 @@ async function runSession(){
       for(let i=rec;i>0;i--){ui("Pidätä",String(i),"palautus",null);arcSet((i-1)/rec,1);if(i<=3)tick();await wait(1000)}
       ui("Päästä irti","","ulos","Rento uloshengitys.");say("Päästä irti.");chime(440);buzz(30);orb(.5,3);exhale(3);
       await wait(3500);
-      if(r<rounds){phase("rest");ring.innerHTML="";ui("Hengitä vapaasti",fmt(held),"kierros "+r,"Lepää hetki.");await wait(4000)}
+      if(r<rounds){phase("rest");ring.innerHTML="";ui("Hengitä vapaasti",fmt(held),"kierros "+r,"Lepää hetki. Napauta palloa, niin jatkat heti.");await advWait(()=>wait(4000))}
     }
     cur.totalSec=Math.round((Date.now()-new Date(cur.start))/1000);
     breathNoise(false);$("#stopBtn").hidden=true;
     phase("done");ring.innerHTML="";orb(.78,2);ui("Valmis","✓","","Hengitä vapaasti ja tunnustele oloa.");
     say("Valmis. Hengitä vapaasti ja tunnustele oloasi.");chime(784,2.6,.06);setTimeout(()=>chime(1046,2.6,.04),220);buzz([40,60,40]);
-    await sleep(2200);
+    await advWait(()=>wait(2200)).catch(()=>{});
     endLive();openEnd(false);
   }catch(e){
     if(e!=="abort")console.error(e);
@@ -684,14 +688,15 @@ function idle(){
   ui(h<5?"Hyvää yötä":h<11?"Hyvää huomenta":h<17?"Hyvää päivää":"Hyvää iltaa","Aloita","napauta palloa","");
 }
 function stop(){if(!run)return;run.abort=true;run.rej?.()}
-$("#orbBox").onclick=()=>{if(!run&&!openSheetId())runSession()};
-$("#orbBox").onkeydown=e=>{if(e.key==="Enter"&&!run){e.preventDefault();runSession()}};
+$("#orbBox").onclick=()=>{if(openSheetId())return;if(!run)runSession();else advance()};
+$("#orbBox").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();if(!run)runSession();else advance()}};
 $("#stopBtn").onclick=stop;
 $("#skipBtn").onclick=()=>{if(run&&!holding){run.skip=true;run.res?.()}};
 document.addEventListener("pointerdown",e=>{if(holding&&!e.target.closest("button")){e.preventDefault();run.res()}});
 document.addEventListener("keydown",e=>{
   if(e.code==="Space"){
     if(holding){e.preventDefault();run.res();return}
+    if(run&&run.canAdv){e.preventDefault();advance();return}
     if(!run&&!openSheetId()&&$("#session").classList.contains("on")&&!e.target.closest("button,input,textarea,a,[role=button]")){e.preventDefault();runSession()}
   }
   if(e.key==="Escape"){if(run)stop();else{const id=openSheetId();if(id&&!$("#"+id).hasAttribute("data-lock"))closeSheet(id)}}
@@ -790,7 +795,12 @@ function drawChart(a){
 }
 
 /* ---------- Navigointi & käynnistys ---------- */
-$(".sky b").style.backgroundImage=Array.from({length:110},()=>{const r=Math.random();return `radial-gradient(${r<.15?1.6:1}px ${r<.15?1.6:1}px at ${(Math.random()*100).toFixed(1)}% ${(Math.random()*100).toFixed(1)}%,rgba(255,255,255,${(.35+Math.random()*.6).toFixed(2)}) 50%,transparent 51%)`}).join(",");
+function drawStars(){
+  const c=$("#stars"),d=Math.min(2,devicePixelRatio||1),w=innerWidth,h=innerHeight,x=c.getContext("2d");
+  c.width=w*d;c.height=h*d;x.scale(d,d);x.fillStyle="#fff";
+  for(let i=0;i<Math.round(w*h/7000);i++){x.globalAlpha=.2+Math.random()*.6;x.beginPath();x.arc(Math.random()*w,Math.random()*h,Math.random()<.12?1.1:.6,0,7);x.fill()}
+}
+drawStars();let rsz;window.addEventListener("resize",()=>{clearTimeout(rsz);rsz=setTimeout(drawStars,300)});
 function show(v){$$("nav.tabs button").forEach(x=>x.classList.toggle("on",x.dataset.v===v));$$(".view").forEach(x=>x.classList.toggle("on",x.id===v));if(v==="history")render();if(v==="sync"){updateSyncStatus();updPill()}window.scrollTo(0,0)}
 $$("nav.tabs button").forEach(b=>b.onclick=()=>show(b.dataset.v));
 buildSettings();idle();renderHome();

@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hengitys</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b1118">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#0b1118;--panel:#131c27;--line:#223041;--text:#e6edf3;--mute:#8a9bb0;--accent:#4fd1c5;--accent2:#7aa7ff;--warn:#f6ad55}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 800px at 50% 30%,#10202b,var(--bg));color:var(--text);font:16px/1.5 system-ui,Segoe UI,sans-serif;min-height:100vh}
+.wrap{max-width:880px;margin:0 auto;padding:20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:20px;font-weight:600;margin:0;letter-spacing:.5px}
+nav button{background:none;border:1px solid var(--line);color:var(--mute);padding:6px 14px;border-radius:20px;cursor:pointer;margin-left:6px}
+nav button.on{color:var(--text);border-color:var(--accent)}
+.view{display:none}.view.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.field{flex:1;min-width:150px}
+label{display:block;color:var(--mute);font-size:13px;margin-bottom:4px}
+select,input[type=text],textarea{width:100%;background:#0e1620;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px}
+.btn{background:var(--accent);color:#04201d;border:0;padding:12px 26px;border-radius:30px;font-size:16px;font-weight:600;cursor:pointer}
+.btn.sec{background:none;color:var(--text);border:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+.center{text-align:center}
+#stage{display:flex;flex-direction:column;align-items:center;padding:10px 0}
+#bubbleBox{width:min(70vw,360px);height:min(70vw,360px);display:flex;align-items:center;justify-content:center;margin:10px 0}
+#bubble{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8ff3e8,var(--accent) 45%,#1d6f74);box-shadow:0 0 80px rgba(79,209,197,.35);transform:scale(.45);transition:transform 2s ease-in-out}
+#bubble.hold{background:radial-gradient(circle at 35% 30%,#b8ceff,var(--accent2) 45%,#2c4a99);box-shadow:0 0 80px rgba(122,167,255,.3)}
+#big{font-size:64px;font-weight:200;font-variant-numeric:tabular-nums;min-height:76px}
+#label{color:var(--mute);min-height:26px;font-size:18px}
+#sub{color:var(--mute);font-size:14px;min-height:22px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.stat{background:#0e1620;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.stat b{display:block;font-size:26px;font-weight:300}
+.stat span{color:var(--mute);font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--mute);font-weight:500}
+.chips button{background:#0e1620;border:1px solid var(--line);color:var(--text);padding:6px 12px;border-radius:16px;cursor:pointer;margin:2px}
+.chips button.on{border-color:var(--accent);color:var(--accent)}
+.note{color:var(--warn);font-size:13px}
+.muted{color:var(--mute);font-size:14px}
+#sync{font-size:13px;color:var(--mute)}
+#sync.ok{color:var(--accent)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:20px;z-index:9}
+.modal.on{display:flex}
+.modal .card{max-width:520px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🌬️ Hengitys</h1>
+  <nav>
+    <button data-v="session" class="on">Harjoitus</button>
+    <button data-v="history">Historia</button>
+    <button data-v="sync">Synkka</button>
+  </nav>
+</header>
+
+<!-- HARJOITUS -->
+<section id="session" class="view on">
+  <div class="card" id="setup">
+    <div class="row">
+      <div class="field"><label>Hengityksiä / kierros</label>
+        <select id="sBreaths"><option>30</option><option selected>35</option><option>40</option></select></div>
+      <div class="field"><label>Hengityksen tahti</label>
+        <select id="sPace"><option value="1.5">Nopea (1,5 s)</option><option value="2" selected>Normaali (2 s)</option><option value="2.5">Rauhallinen (2,5 s)</option><option value="3">Hidas (3 s)</option></select></div>
+      <div class="field"><label>Kierroksia</label>
+        <select id="sRounds"><option>3</option><option selected>4</option><option>5</option></select></div>
+      <div class="field"><label>Palautuspidätys</label>
+        <select id="sRec"><option>10</option><option selected>15</option><option>20</option></select></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="field"><label><input type="checkbox" id="sSound" checked> Äänimerkit</label></div>
+      <div class="field"><label><input type="checkbox" id="sVoice"> Suomenkielinen puheohjaus</label></div>
+    </div>
+    <p class="note">⚠️ Tee istuen tai maaten. Ei koskaan vedessä, autoa ajaessa tai missään, missä pyörtyminen on vaarallista. Ei raskauden, epilepsian tai sydän- ja verenkiertoelimistön sairauden kanssa ilman lääkärin lupaa.</p>
+  </div>
+  <div class="card center" id="stage">
+    <div id="label">Valmiina</div>
+    <div id="bubbleBox"><div id="bubble"></div></div>
+    <div id="big">&nbsp;</div>
+    <div id="sub">Aloita painamalla nappia. Pidätyksen voit lopettaa välilyönnillä tai napauttamalla ruutua.</div>
+    <div style="margin-top:14px">
+      <button class="btn" id="startBtn">Aloita</button>
+      <button class="btn sec" id="stopBtn" style="display:none">Keskeytä</button>
+    </div>
+  </div>
+</section>
+
+<!-- HISTORIA -->
+<section id="history" class="view">
+  <div class="card"><div class="stats" id="statsBox"></div></div>
+  <div class="card"><b>Paras pidätys per harjoitus</b><div id="chart" style="margin-top:8px"></div></div>
+  <div class="card"><b>Viimeisimmät</b><div style="overflow-x:auto"><table id="histTable"></table></div></div>
+</section>
+
+<!-- SYNKKA -->
+<section id="sync" class="view">
+  <div class="card">
+    <b>Pilvisynkka (Google Sheets)</b>
+    <p class="muted">Kaikki laitteet tallentavat samaan Google Sheet -taulukkoon. Claude ja Cowork lukevat datan sieltä.</p>
+    <div class="row">
+      <div class="field" style="flex:3"><label>Apps Script -osoite</label><input type="text" id="cUrl" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      <div class="field"><label>Avain</label><input type="text" id="cKey"></div>
+    </div>
+    <p id="cloudStatus" class="muted">Ei yhdistetty.</p>
+    <button class="btn" id="cSave">Tallenna ja synkkaa</button>
+    <button class="btn sec" id="cLink">Kopioi puhelimen asetuslinkki</button>
+  </div>
+  <div class="card">
+    <b>Paikallinen kansio (vain tietokone)</b>
+    <p class="muted">Sovellus tallentaa jokaisen harjoituksen valitsemaasi kansioon tiedostoihin <code>sessions.json</code> (kaikki data) ja <code>yhteenveto.md</code> (luettava yhteenveto). Anna Coworkille pääsy samaan kansioon, niin se voi lukea ne ja verrata Oura-dataan.</p>
+    <p id="syncStatus" class="muted">Kansiota ei ole yhdistetty.</p>
+    <button class="btn" id="pickBtn">Valitse / yhdistä kansio</button>
+    <button class="btn sec" id="exportBtn">Lataa varmuuskopio</button>
+    <p class="muted">Vihje: valitse kansio <code>C:\Users\juuso\OneDrive\Documents\Ohjelmat\WimHof</code>. Käytä Edge- tai Chrome-selainta. Data on lisäksi aina tallessa selaimen muistissa.</p>
+  </div>
+</section>
+</div>
+
+<!-- Harjoituksen jälkeen -->
+<div class="modal" id="endModal"><div class="card">
+  <h2 style="margin-top:0">Hyvin tehty 🙌</h2>
+  <div id="endSummary" class="muted"></div>
+  <div style="margin-top:12px"><label>Mihin aikaan?</label>
+    <div class="chips" id="chipTod"><button data-v="aamu">Aamu</button><button data-v="päivä">Päivä</button><button data-v="ilta">Ilta</button></div></div>
+  <div style="margin-top:8px"><label>Olo harjoituksen jälkeen</label>
+    <div class="chips" id="chipFeel"><button data-v="1">1 huono</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5 mahtava</button></div></div>
+  <div style="margin-top:8px"><label>Kylmä (suihku / avanto) tänään?</label>
+    <div class="chips" id="chipCold"><button data-v="ei">Ei</button><button data-v="kyllä">Kyllä</button></div></div>
+  <div style="margin-top:8px"><label>Muistiinpano</label><textarea id="noteText" rows="2" placeholder="Esim. kihelmöintiä, kevyt olo, väsynyt..."></textarea></div>
+  <div style="margin-top:14px"><button class="btn" id="saveBtn">Tallenna</button> <button class="btn sec" id="discardBtn">Hylkää</button></div>
+</div></div>
+
+<!-- Ensikäynnistys -->
+<div class="modal" id="warnModal"><div class="card">
+  <h2 style="margin-top:0">Turvallisuus ensin</h2>
+  <p>Wim Hof -hengitys aiheuttaa tahallista hyperventilaatiota. Se voi aiheuttaa huimausta, kihelmöintiä ja pahimmillaan pyörtymisen.</p>
+  <ul>
+    <li>Tee aina istuen tai maaten, turvallisessa paikassa.</li>
+    <li>Ei koskaan vedessä, suihkussa, autoa ajaessa tai muun vaaran lähellä.</li>
+    <li>Ei raskaana, epilepsian, korkean verenpaineen tai sydänsairauden kanssa ilman lääkärin lupaa.</li>
+    <li>Jos olo huononee, lopeta ja hengitä normaalisti.</li>
+  </ul>
+  <button class="btn" id="warnOk">Ymmärrän</button>
+</div></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=s=>{s=Math.round(s);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- Tallennus ---------- */
+let sessions=[]; let dirHandle=null;
+try{sessions=JSON.parse(localStorage.getItem("wh_sessions")||"[]")}catch(e){}
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open("wh",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function idbGet(k){const d=await idb();return new Promise(r=>{const q=d.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)})}
+async function idbSet(k,v){const d=await idb();return new Promise(r=>{const t=d.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=r})}
+function mergeSessions(a){const m=new Map(sessions.map(s=>[s.id,s]));a.forEach(s=>m.set(s.id,s));sessions=[...m.values()].sort((x,y)=>x.start<y.start?-1:1)}
+function localSave(){try{localStorage.setItem("wh_sessions",JSON.stringify(sessions))}catch(e){}}
+async function readFolder(){
+  try{const fh=await dirHandle.getFileHandle("sessions.json");const t=await (await fh.getFile()).text();const j=JSON.parse(t);mergeSessions(j.sessions||j)}catch(e){}
+}
+async function writeFolder(){
+  if(!dirHandle)return false;
+  try{
+    if(await dirHandle.queryPermission({mode:"readwrite"})!=="granted"&&await dirHandle.requestPermission({mode:"readwrite"})!=="granted")return false;
+    const w=async(name,txt)=>{const fh=await dirHandle.getFileHandle(name,{create:true});const ws=await fh.createWritable();await ws.write(txt);await ws.close()};
+    await w("sessions.json",JSON.stringify({schema:"hengitys-v1",updated:new Date().toISOString(),sessions},null,2));
+    await w("yhteenveto.md",makeSummary());
+    return true;
+  }catch(e){console.error(e);return false}
+}
+async function initFolder(){
+  try{const h=await idbGet("dir");if(h){dirHandle=h;if(await h.queryPermission({mode:"readwrite"})==="granted"){await readFolder();localSave()}}}catch(e){}
+  updateSyncStatus();
+}
+async function updateSyncStatus(){
+  const el=$("#syncStatus");
+  if(!window.showDirectoryPicker){el.textContent="Selain ei tue kansioyhteyttä. Käytä Edgeä tai Chromea.";return}
+  if(!dirHandle){el.textContent="Kansiota ei ole yhdistetty.";return}
+  const p=await dirHandle.queryPermission({mode:"readwrite"});
+  el.textContent=p==="granted"?"✅ Yhdistetty kansioon: "+dirHandle.name:"Kansio "+dirHandle.name+" on valittu. Paina nappia antaaksesi luvan uudelleen.";
+}
+$("#pickBtn").onclick=async()=>{
+  try{
+    if(dirHandle&&await dirHandle.requestPermission({mode:"readwrite"})==="granted"){await readFolder()}
+    else{dirHandle=await showDirectoryPicker({mode:"readwrite",id:"wimhof"});await idbSet("dir",dirHandle);await readFolder()}
+    localSave();await writeFolder();updateSyncStatus();render()
+  }catch(e){}
+};
+$("#exportBtn").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({sessions},null,2)],{type:"application/json"}));a.download="hengitys-varmuuskopio.json";a.click()};
+
+/* ---------- Pilvisynkka (Google Sheets / Apps Script) ---------- */
+let cloud={url:"",key:""}; let pushed=new Set();
+try{cloud=JSON.parse(localStorage.getItem("wh_cloud")||"null")||cloud;pushed=new Set(JSON.parse(localStorage.getItem("wh_pushed")||"[]"))}catch(e){}
+const saveCloudState=()=>{try{localStorage.setItem("wh_cloud",JSON.stringify(cloud));localStorage.setItem("wh_pushed",JSON.stringify([...pushed]))}catch(e){}};
+const deviceName=()=>/Android|iPhone|Mobile/i.test(navigator.userAgent)?"puhelin":"tietokone";
+function cloudMsg(t,ok){const el=$("#cloudStatus");el.textContent=t;el.style.color=ok?"var(--accent)":""}
+async function cloudSync(){
+  if(!cloud.url||!cloud.key){cloudMsg("Ei yhdistetty.");return false}
+  try{
+    for(const s of sessions){
+      if(pushed.has(s.id))continue;
+      const r=await fetch(cloud.url,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({key:cloud.key,device:s.device||deviceName(),session:s})});
+      const j=await r.json();if(!j.ok)throw new Error(j.error||"virhe");
+      pushed.add(s.id);saveCloudState();
+    }
+    const r=await fetch(cloud.url+"?key="+encodeURIComponent(cloud.key));
+    const j=await r.json();if(!j.ok)throw new Error(j.error||"virhe");
+    mergeSessions(j.sessions||[]);(j.sessions||[]).forEach(s=>pushed.add(s.id));saveCloudState();localSave();render();
+    cloudMsg("✅ Synkattu "+new Date().toLocaleTimeString("fi-FI",{hour:"2-digit",minute:"2-digit"})+" ("+sessions.length+" harjoitusta)",true);
+    return true;
+  }catch(e){cloudMsg("Synkka epäonnistui ("+e.message+"). Yritetään uudelleen, kun yhteys on kunnossa.");return false}
+}
+$("#cSave").onclick=()=>{cloud={url:$("#cUrl").value.trim(),key:$("#cKey").value.trim()};saveCloudState();cloudSync()};
+$("#cLink").onclick=async()=>{
+  const base=location.href.split("#")[0];
+  const link=base+"#cloud="+encodeURIComponent(cloud.url)+"|"+encodeURIComponent(cloud.key);
+  try{await navigator.clipboard.writeText(link);cloudMsg("Linkki kopioitu. Avaa se puhelimella (lähetä itsellesi esim. sähköpostilla).",true)}catch(e){prompt("Kopioi linkki:",link)}
+};
+(function importFromHash(){
+  const m=location.hash.match(/^#cloud=(.+)\|(.+)$/);
+  if(m){cloud={url:decodeURIComponent(m[1]),key:decodeURIComponent(m[2])};saveCloudState();history.replaceState(null,"",location.pathname)}
+  $("#cUrl").value=cloud.url;$("#cKey").value=cloud.key;
+})();
+
+/* ---------- Yhteenveto Claudelle ---------- */
+const best=s=>Math.max(0,...s.rounds.map(r=>r.retentionSec));
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+function makeSummary(){
+  const now=Date.now(),d30=sessions.filter(s=>now-new Date(s.start)<30*864e5),d7=sessions.filter(s=>now-new Date(s.start)<7*864e5);
+  const pr=sessions.length?Math.max(...sessions.map(best)):0;
+  let t="# Hengitysharjoittelu: yhteenveto\n\n";
+  t+="_Päivitetty: "+new Date().toLocaleString("fi-FI")+"_\n\n";
+  t+="Wim Hof -tyyppinen hengitys (hyperventilaatio + uloshengityksen pidätys). Kaikki raakadata on tiedostossa `sessions.json`. Ajat sekunteina.\n\n";
+  t+="## Yleiskuva\n";
+  t+="- Harjoituksia yhteensä: "+sessions.length+" (viim. 7 pv: "+d7.length+", viim. 30 pv: "+d30.length+")\n";
+  t+="- Ennätyspidätys: "+pr+" s ("+fmt(pr)+")\n";
+  t+="- Keskimääräinen paras pidätys viim. 30 pv: "+Math.round(avg(d30.map(best)))+" s\n";
+  t+="- Keskimääräinen kaikkien kierrosten pidätys viim. 30 pv: "+Math.round(avg(d30.flatMap(s=>s.rounds.map(r=>r.retentionSec))))+" s\n\n";
+  t+="## Viimeiset 30 harjoitusta\n\n| Päivä | Aika | Kierrokset (pidätys s) | Paras | Olo 1-5 | Kylmä | Muistiinpano |\n|---|---|---|---|---|---|---|\n";
+  sessions.slice(-30).reverse().forEach(s=>{
+    const dt=new Date(s.start);
+    t+="| "+dt.toLocaleDateString("fi-FI")+" "+dt.toLocaleTimeString("fi-FI",{hour:"2-digit",minute:"2-digit"})+" | "+(s.timeOfDay||"")+" | "+s.rounds.map(r=>r.retentionSec).join(" / ")+" | "+best(s)+" | "+(s.feeling||"")+" | "+(s.cold||"")+" | "+(s.note||"").replace(/[\r\n|]+/g," ")+" |\n";
+  });
+  t+="\n## Huomioita analyysiin\n- `start` on ISO-aikaleima (UTC). Vertaa Oura-dataan (HRV, leposyke, uni, readiness) samalta päivältä ja edelliseltä yöltä.\n- Pidätysaikojen kasvu kierrosten välillä ja viikkotrendi ovat tärkeimmät mittarit.\n";
+  return t;
+}
+
+/* ---------- Äänet & puhe ---------- */
+let actx;
+function tone(f,dur=.25,vol=.08){
+  if(!$("#sSound").checked)return;
+  try{actx=actx||new AudioContext();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;o.type="sine";g.gain.setValueAtTime(0,actx.currentTime);g.gain.linearRampToValueAtTime(vol,actx.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+dur);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+dur)}catch(e){}
+}
+function say(t){if(!$("#sVoice").checked||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="fi-FI";u.rate=.95;speechSynthesis.speak(u)}
+
+/* ---------- Harjoitus ---------- */
+let running=false,abort=false,holdResolve=null,wake=null,cur=null;
+const bubble=$("#bubble");
+function setBubble(scale,sec,hold=false){bubble.style.transition="transform "+sec+"s ease-in-out";bubble.style.transform="scale("+scale+")";bubble.classList.toggle("hold",hold)}
+function ui(label,big,sub){if(label!=null)$("#label").textContent=label;if(big!=null)$("#big").textContent=big;if(sub!=null)$("#sub").textContent=sub}
+const chk=()=>{if(abort)throw "abort"};
+
+async function waitHold(){
+  const t0=performance.now();
+  const iv=setInterval(()=>ui(null,fmt((performance.now()-t0)/1000)),200);
+  await new Promise(r=>holdResolve=r);
+  clearInterval(iv);holdResolve=null;
+  return Math.round((performance.now()-t0)/1000);
+}
+function endHold(){if(holdResolve)holdResolve()}
+document.addEventListener("keydown",e=>{if(e.code==="Space"&&holdResolve){e.preventDefault();endHold()}});
+$("#stage").addEventListener("click",e=>{if(e.target.tagName!=="BUTTON")endHold()});
+
+async function runSession(){
+  const n=+$("#sBreaths").value,pace=+$("#sPace").value,rounds=+$("#sRounds").value,rec=+$("#sRec").value;
+  running=true;abort=false;
+  $("#startBtn").style.display="none";$("#stopBtn").style.display="";
+  try{wake=await navigator.wakeLock?.request("screen")}catch(e){}
+  cur={id:Date.now().toString(36),start:new Date().toISOString(),breathsPerRound:n,paceSec:pace,recoverySec:rec,rounds:[]};
+  try{
+    ui("Asetu mukavasti","","Istu tai makaa. Silmät kiinni, jos haluat.");say("Asetu mukavasti.");
+    setBubble(.45,1);await sleep(4000);chk();
+    for(let r=1;r<=rounds;r++){
+      ui("Kierros "+r+"/"+rounds,"","Valmistaudu...");say("Kierros "+r);tone(440,.5);await sleep(2500);chk();
+      for(let b=1;b<=n;b++){
+        ui("Kierros "+r+"/"+rounds+": hengitä",b+" / "+n,"Syvään sisään ja rennosti ulos");
+        setBubble(1,pace/2);tone(520,.15);await sleep(pace*500);chk();
+        setBubble(.45,pace/2);tone(380,.15);await sleep(pace*500);chk();
+      }
+      /* uloshengitys + pidätys */
+      ui("Hengitä ulos ja pidätä","0:00","Älä hengitä sisään. Kun hengittämisen tarve tulee, paina välilyöntiä tai napauta.");
+      say("Hengitä ulos ja pidätä hengitystä.");tone(330,.6);setBubble(.3,3,true);
+      const held=await waitHold();chk();
+      cur.rounds.push({round:r,retentionSec:held});
+      /* palautus */
+      ui("Hengitä syvään sisään","","Täytä keuhkot ja pidätä.");say("Hengitä syvään sisään ja pidätä.");tone(600,.5);
+      setBubble(1,2.5,false);await sleep(2500);chk();
+      for(let i=rec;i>0;i--){ui("Pidätä",String(i),"");if(i===3)tone(500,.1);await sleep(1000);chk()}
+      ui("Hengitä ulos","","Rento uloshengitys.");say("Hengitä ulos.");tone(380,.6);setBubble(.45,3);await sleep(3500);chk();
+      if(r<rounds){ui("Hengitä normaalisti","Tulos: "+held+" s","Lepää hetki.");await sleep(4000);chk()}
+    }
+    cur.totalSec=Math.round((Date.now()-new Date(cur.start))/1000);
+    finish();
+  }catch(e){
+    if(e!=="abort")console.error(e);
+    resetUI();
+    if(cur&&cur.rounds.length&&confirm("Tallennetaanko keskeytetty harjoitus ("+cur.rounds.length+" kierrosta)?")){cur.totalSec=Math.round((Date.now()-new Date(cur.start))/1000);cur.partial=true;finish()}
+  }
+}
+function resetUI(){running=false;wake?.release?.();$("#startBtn").style.display="";$("#stopBtn").style.display="none";setBubble(.45,1);ui("Valmiina","\u00a0","Aloita painamalla nappia.")}
+$("#startBtn").onclick=runSession;
+$("#stopBtn").onclick=()=>{abort=true;endHold();speechSynthesis?.cancel()};
+
+/* ---------- Lopetus ---------- */
+const sel={};
+function chips(id,key){$$("#"+id+" button").forEach(b=>b.onclick=()=>{$$("#"+id+" button").forEach(x=>x.classList.remove("on"));b.classList.add("on");sel[key]=b.dataset.v})}
+chips("chipTod","tod");chips("chipFeel","feel");chips("chipCold","cold");
+function finish(){
+  resetUI();
+  const h=new Date(cur.start).getHours();const tod=h<11?"aamu":h<17?"päivä":"ilta";
+  Object.keys(sel).forEach(k=>delete sel[k]);$$(".chips button").forEach(x=>x.classList.remove("on"));
+  $$("#chipTod button").forEach(b=>{if(b.dataset.v===tod){b.classList.add("on");sel.tod=tod}});
+  $("#noteText").value="";
+  const prev=sessions.length?Math.max(...sessions.map(best)):0,b=best(cur);
+  $("#endSummary").innerHTML="Pidätykset: <b>"+cur.rounds.map(r=>r.retentionSec+" s").join(" · ")+"</b><br>Kesto "+fmt(cur.totalSec)+(b>prev&&prev>0?"<br>🏆 Uusi ennätys!":"");
+  $("#endModal").classList.add("on");tone(660,.8);
+}
+$("#saveBtn").onclick=async()=>{
+  cur.timeOfDay=sel.tod||"";cur.feeling=sel.feel?+sel.feel:null;cur.cold=sel.cold||"";cur.note=$("#noteText").value.trim();
+  cur.device=deviceName();
+  sessions.push(cur);localSave();
+  $("#endModal").classList.remove("on");render();
+  const ok=await writeFolder();updateSyncStatus();
+  const cl=cloud.url?await cloudSync():false;
+  if(!ok&&!cl&&!dirHandle)alert("Tallennettu vain tämän laitteen muistiin. Ota pilvisynkka käyttöön Synkka-välilehdellä, jotta Claude näkee datan.");
+};
+$("#discardBtn").onclick=()=>{$("#endModal").classList.remove("on")};
+
+/* ---------- Historia ---------- */
+function render(){
+  const s=sessions;
+  const pr=s.length?Math.max(...s.map(best)):0,now=Date.now();
+  const w=s.filter(x=>now-new Date(x.start)<7*864e5);
+  $("#statsBox").innerHTML=[["Harjoituksia",s.length],["Viim. 7 pv",w.length],["Ennätys",fmt(pr)],["Ka. paras (30 pv)",fmt(avg(s.filter(x=>now-new Date(x.start)<30*864e5).map(best)))]].map(a=>'<div class="stat"><b>'+a[1]+"</b><span>"+a[0]+"</span></div>").join("");
+  $("#histTable").innerHTML="<tr><th>Päivä</th><th>Pidätykset</th><th>Olo</th><th>Muistiinpano</th></tr>"+s.slice(-15).reverse().map(x=>"<tr><td>"+new Date(x.start).toLocaleDateString("fi-FI")+" <span class='muted'>"+(x.timeOfDay||"")+"</span></td><td>"+x.rounds.map(r=>r.retentionSec).join(" / ")+" s</td><td>"+(x.feeling||"")+"</td><td>"+esc(x.note||"")+"</td></tr>").join("");
+  drawChart(s.slice(-30));
+}
+const esc=t=>t.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function drawChart(a){
+  const el=$("#chart");
+  if(a.length<2){el.innerHTML='<span class="muted">Kuvaaja ilmestyy, kun harjoituksia on vähintään kaksi.</span>';return}
+  const W=800,H=200,p=28,v=a.map(best),mx=Math.max(...v)*1.1||1;
+  const pts=v.map((y,i)=>[p+i*(W-2*p)/(a.length-1),H-p-y/mx*(H-2*p)]);
+  el.innerHTML='<svg viewBox="0 0 '+W+" "+H+'" style="width:100%"><polyline fill="none" stroke="#4fd1c5" stroke-width="2.5" points="'+pts.map(q=>q.join(",")).join(" ")+'"/>'+pts.map((q,i)=>'<circle cx="'+q[0]+'" cy="'+q[1]+'" r="4" fill="#4fd1c5"><title>'+new Date(a[i].start).toLocaleDateString("fi-FI")+": "+v[i]+" s</title></circle>").join("")+'<text x="4" y="14" fill="#8a9bb0" font-size="12">'+Math.round(mx)+' s</text></svg>';
+}
+
+/* ---------- Navigointi ---------- */
+$$("nav button").forEach(b=>b.onclick=()=>{$$("nav button").forEach(x=>x.classList.toggle("on",x===b));$$(".view").forEach(v=>v.classList.toggle("on",v.id===b.dataset.v));if(b.dataset.v==="history")render();if(b.dataset.v==="sync")updateSyncStatus()});
+if(!localStorage.getItem("wh_warned"))$("#warnModal").classList.add("on");
+$("#warnOk").onclick=()=>{try{localStorage.setItem("wh_warned","1")}catch(e){}$("#warnModal").classList.remove("on")};
+initFolder().then(render).then(()=>{if(cloud.url)cloudSync()});
+window.addEventListener("online",()=>{if(cloud.url)cloudSync()});
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
